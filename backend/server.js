@@ -26,15 +26,18 @@ db.connect((err) => {
 
 // Ruta para crear un producto
 app.post('/api/products', (req, res) => {
-    const { name, description, price } = req.body;
+    const { name, description, price ,url } = req.body;
+    console.log('Datos recibidos:', { name, description, price, url });
 
     // Consulta SQL para insertar un nuevo producto
-    const query = 'INSERT INTO productos (name_product, description_product, price_product) VALUES (?, ?, ?)';
-    db.query(query, [name, description, price], (err, result) => {
+    const query = 'INSERT INTO productos (name_product, description_product, price_product, url_image) VALUES (?,?,?,?)';
+    db.query(query, [name, description, price , url], (err, result) => {
         if (err) {
             console.error('Error al crear el producto:', err);
             return res.status(500).json({ error: 'Error al crear el producto' });
         }
+        console.log(query);
+        console.log(url);
         res.status(201).json({ message: 'Producto creado exitosamente', productId: result.insertId });
     });
 });
@@ -69,11 +72,11 @@ app.delete('/api/products/:id', (req, res) => {
 // Ruta para actualizar un producto
 app.put('/api/products/:id', (req, res) => {
     const productId = req.params.id;
-    const { name_product, description_product, price_product } = req.body;
+    const { name_product, description_product, price_product, url_image } = req.body;
 
     // Consulta SQL para actualizar el producto
-    const query = 'UPDATE productos SET name_product = ?, description_product = ?, price_product = ? WHERE id_product = ?';
-    db.query(query, [name_product, description_product, price_product, productId], (err, result) => {
+    const query = 'UPDATE productos SET name_product = ?, description_product = ?, price_product = ?, url_image = ? WHERE id_product = ?';
+    db.query(query, [name_product, description_product, price_product, url_image, productId], (err, result) => {
         if (err) {
             console.error('Error al actualizar el producto:', err);
             return res.status(500).json({ error: 'Error al actualizar el producto' });

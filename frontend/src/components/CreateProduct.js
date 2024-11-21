@@ -9,6 +9,7 @@ function CreateProduct() {
     name: "",
     description: "",
     price: "",
+    url: ""
   });
 
   const handleChange = (e) => {
@@ -34,10 +35,11 @@ function CreateProduct() {
         setProduct({
             name: '',
             description: '',
-            price: ''
+            price: '',
+            url: ''
         }); 
           // Redirigir a la página principal (ruta '/')
-          navigate('/list-product'); 
+         navigate('/list-product'); 
 
     } catch (error) {
         console.error('Error al crear el producto:', error);
@@ -82,6 +84,17 @@ function CreateProduct() {
             placeholder="Ingresa el precio"
             name="price"
             value={product.price}
+            onChange={handleChange}
+          />
+        </Form.Group>
+
+        <Form.Group className="form-product-group" controlId="formProductUrl">
+          <Form.Label>URL de la imagen</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Ingresa URL"
+            name="url"
+            value={product.url}
             onChange={handleChange}
           />
         </Form.Group>
