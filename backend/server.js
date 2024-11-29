@@ -26,12 +26,12 @@ db.connect((err) => {
 
 // Ruta para crear un producto
 app.post('/api/products', (req, res) => {
-    const { name, description, price ,url } = req.body;
-    console.log('Datos recibidos:', { name, description, price, url });
+    const { name,code, description, price ,url } = req.body;
+    console.log('Datos recibidos:', { name,code, description, price, url });
 
     // Consulta SQL para insertar un nuevo producto
-    const query = 'INSERT INTO productos (name_product, description_product, price_product, url_image) VALUES (?,?,?,?)';
-    db.query(query, [name, description, price , url], (err, result) => {
+    const query = 'INSERT INTO productos (name_product, code_product, description_product, price_product, url_image) VALUES (?,?,?,?,?)';
+    db.query(query, [name, code, description, price , url], (err, result) => {
         if (err) {
             console.error('Error al crear el producto:', err);
             return res.status(500).json({ error: 'Error al crear el producto' });

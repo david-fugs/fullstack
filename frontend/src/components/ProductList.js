@@ -1,28 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { Table, Container, Button, Modal, Form , Card, Col, Row } from "react-bootstrap";
+import { Table, Container, Button, Modal, Form, Card, Col, Row } from "react-bootstrap";
+import { CartContext } from "./CartContext"; // Importa CartContext
 
 const ProductList = () => {
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [viewedProduct, setViewedProduct] = useState(null);
   const [products, setProducts] = useState([]);
-  const [showEditModal, setShowEditModal] = useState(false); // Estado para mostrar el modal de edición
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState({
     id: "",
     name: "",
     description: "",
     price: "",
+    url: "",
   });
 
-  // Obtener productos de la base de datos al montar el componente
+  // Accede a la función addToCart desde el CartContext
+  const { addToCart } = useContext(CartContext);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/products");
-        setProducts(response.data); // Guardamos los productos en el estado
+        setProducts(response.data);
       } catch (error) {
         console.error("Error al obtener los productos:", error);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -38,16 +43,9 @@ const ProductList = () => {
     setShowEditModal(true);
   };
 
-  // Maneja los cambios en los campos del formulario del modal
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setSelectedProduct((prev) => ({ ...prev, [name]: value }));
-  };
-
   // Función para guardar los cambios de edición en la base de datos
   const handleUpdate = async (e) => {
     e.preventDefault();
-    console.log("Intentando editar el producto con ID:", selectedProduct.id);
     try {
       const response = await axios.put(
         `http://localhost:5000/api/products/${selectedProduct.id}`,
@@ -56,23 +54,20 @@ const ProductList = () => {
           description_product: selectedProduct.description,
           price_product: selectedProduct.price,
           url_image: selectedProduct.url,
-
-
         }
       );
       console.log("Respuesta del servidor:", response.data);
       alert("Producto editado correctamente");
       setShowEditModal(false);
       // Recargar productos para reflejar cambios
-      const updatedProducts = await axios.get(
-        "http://localhost:5000/api/products"
-      );
+      const updatedProducts = await axios.get("http://localhost:5000/api/products");
       setProducts(updatedProducts.data);
     } catch (error) {
       console.error("Error al editar el producto:", error);
       alert("Hubo un error al editar el producto");
     }
   };
+
   // Función para eliminar un producto
   const deleteProduct = async (productId) => {
     try {
@@ -86,19 +81,18 @@ const ProductList = () => {
       alert("Hubo un error al eliminar el producto");
     }
   };
-  const agregarCarrito = async (productId) => {
-    try {
-      await axios.post(`http://localhost:5000/api/cart`, {
-        id_product: productId,
-        quantity: 1,
-      });
-      alert("Producto agregado al carrito correctamente");
-    }
-    catch (error) {
-      console.error("Error al agregar el producto al carrito:", error);
-      alert("Hubo un error al agregar el producto al carrito");
-    }
-  }
+
+  // Función para ver el producto
+  const handleCardClick = (product) => {
+    setViewedProduct(product);
+    setShowProductModal(true);
+  };
+
+  // Agregar al carrito
+  const agregarCarrito = (product) => {
+    addToCart(product); // Usamos addToCart del CartContext
+    alert("Producto agregado al carrito correctamente");
+  };
 
   return (
     <Container className="mt-4">
@@ -114,7 +108,10 @@ const ProductList = () => {
               lg={3}
               className="mb-4"
             >
-              <Card>
+              <Card 
+                onClick={() => handleCardClick(product)} 
+                style={{ cursor: "pointer" }}
+              >
                 <Card.Img
                   variant="top"
                   src={product.url_image || "https://via.placeholder.com/150"}
@@ -124,30 +121,34 @@ const ProductList = () => {
                 <Card.Body>
                   <Card.Title>{product.name_product}</Card.Title>
                   <Card.Text>
-                    {product.description_product.length > 100
-                      ? `${product.description_product.substring(0, 100)}...`
-                      : product.description_product}
-                  </Card.Text>
-                  <Card.Text>
                     <strong>Precio:</strong> ${product.price_product}
                   </Card.Text>
                   <div className="d-flex justify-content-between">
-                  <Button
+                    <Button
                       variant="success"
-                      onClick={() => agregarCarrito(product.id_product)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evita que se abra el modal de ver al hacer clic aquí
+                        agregarCarrito(product); // Función para agregar al carrito
+                      }}
                     >
                       Agregar Carrito
                     </Button>
                     <Button
                       variant="success"
-                      style={{ marginRight: "6px",marginLeft: "6px" }}
-                      onClick={() => handleEditClick(product)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evita que se abra el modal de ver al hacer clic aquí
+                        handleEditClick(product); // Función para editar producto
+                      }}
+                      style={{ marginRight: "6px", marginLeft: "6px" }}
                     >
                       Editar
                     </Button>
                     <Button
                       variant="danger"
-                      onClick={() => deleteProduct(product.id_product)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evita que se abra el modal de ver al hacer clic aquí
+                        deleteProduct(product.id_product); // Función para eliminar producto
+                      }}
                     >
                       Eliminar
                     </Button>
@@ -163,56 +164,80 @@ const ProductList = () => {
         )}
       </Row>
 
-      {/* Modal para editar el producto */}
+      {/* Modal de Detalles del Producto */}
+      <Modal show={showProductModal} onHide={() => setShowProductModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Detalles del Producto</Modal.Title>
+        </Modal.Header>
+        {viewedProduct && (
+          <Modal.Body>
+            <Card>
+              <Card.Img
+                variant="top"
+                src={viewedProduct.url_image || "https://via.placeholder.com/150"}
+                alt={`Imagen de ${viewedProduct.name_product}`}
+                style={{ width: "200px", height: "250px", objectFit: "cover" }}
+              />
+              <Card.Body>
+                <Card.Title>{viewedProduct.name_product}</Card.Title>
+                <Card.Text>
+                  <strong>Descripción:</strong> {viewedProduct.description_product || "Sin descripción"}
+                </Card.Text>
+                <Card.Text>
+                  <strong>Precio:</strong> ${viewedProduct.price_product}
+                </Card.Text>
+                <div className="d-flex justify-content-between">
+                  <Button variant="success" onClick={() => agregarCarrito(viewedProduct)}>
+                    Agregar Carrito
+                  </Button>
+                  <Button variant="danger" onClick={() => deleteProduct(viewedProduct.id_product)}>
+                    Eliminar
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Modal.Body>
+        )}
+      </Modal>
+
+      {/* Modal de Edición del Producto */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Editar Producto</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleUpdate}>
-            <Form.Group controlId="formProductName">
+            <Form.Group controlId="productName">
               <Form.Label>Nombre del Producto</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Nombre del producto"
-                name="name"
                 value={selectedProduct.name}
-                onChange={handleChange}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
               />
             </Form.Group>
-            <Form.Group controlId="formProductDescription" className="mt-3">
+            <Form.Group controlId="productDescription">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
                 as="textarea"
-                rows={2}
-                placeholder="Descripción del producto"
-                name="description"
                 value={selectedProduct.description}
-                onChange={handleChange}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, description: e.target.value })}
               />
             </Form.Group>
-            <Form.Group controlId="formProductPrice" className="mt-3">
-
+            <Form.Group controlId="productPrice">
               <Form.Label>Precio</Form.Label>
               <Form.Control
                 type="number"
-                placeholder="Precio del producto"
-                name="price"
                 value={selectedProduct.price}
-                onChange={handleChange}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, price: e.target.value })}
               />
-              
             </Form.Group>
-            <Form.Group controlId="formProductUrl" className="mt-3">
-              <Form.Label>Url Imagen</Form.Label>
+            <Form.Group controlId="productUrl">
+              <Form.Label>URL de Imagen</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="url imagen"
-                name="url"
                 value={selectedProduct.url}
-                onChange={handleChange}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, url: e.target.value })}
               />
-              
             </Form.Group>
             <Button variant="primary" type="submit" className="mt-3">
               Guardar Cambios
@@ -223,4 +248,5 @@ const ProductList = () => {
     </Container>
   );
 };
+
 export default ProductList;

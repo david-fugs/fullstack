@@ -7,6 +7,7 @@ import axios from 'axios';
 function CreateProduct() {
   const [product, setProduct] = useState({
     name: "",
+    code: "",
     description: "",
     price: "",
     url: ""
@@ -34,6 +35,7 @@ function CreateProduct() {
 
         setProduct({
             name: '',
+            code: '',
             description: '',
             price: '',
             url: ''
@@ -61,6 +63,20 @@ function CreateProduct() {
             onChange={handleChange}
           />
         </Form.Group>
+        <Form.Group
+          className="form-product-group"
+          controlId="formProductCode"
+        >
+          <Form.Label>Codigo</Form.Label>
+          <Form.Control
+            type="number"
+            placeholder="Ingresa una codigo del producto"
+            name="code"
+            value={product.code}
+            onChange={handleChange}
+          />
+        </Form.Group>
+
 
         <Form.Group
           className="form-product-group"
