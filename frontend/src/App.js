@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import CreateProduct from './components/CreateProduct';
 import ProductList from './components/ProductList';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import PurchaseForm from './components/PurchaseForm';
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
                     </header>} />
                     <Route path="/create-product" element={<CreateProduct />} />
                     <Route path="/list-product" element={<ProductList />} />
+                    <Route path="/formulario" element={<PurchaseForm />} />
                 </Routes>
                 </div>
                 <Footer />
